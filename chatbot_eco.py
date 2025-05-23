@@ -5,15 +5,18 @@ from langchain.chains import RetrievalQA
 from langchain.prompts import PromptTemplate
 import os
 
-def load_popu_chain():
-    os.environ["OPENAI_API_KEY"] = "your-api-key"
+def load_eco_chain():
+    os.environ["OPENAI_API_KEY"] = "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"
     embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
-    vectorstore = FAISS.load_local("vector_index_popu/popu_index", embeddings, allow_dangerous_deserialization=True)
+    vectorstore = FAISS.load_local("vector_index_eco/eco_index", embeddings, allow_dangerous_deserialization=True)
 
-    prompt_template = """Halo! Kamu asisten digital Telkomsel...
-    {context}
+    prompt_template = """Anda adalah asisten digital Telkomsel...
+    Jawablah pertanyaan pengguna *hanya* berdasarkan informasi berikut:
+    
+    {context}   
+    
     Pertanyaan: {question}
-    Berikan jawaban dari data di atas:"""
+    Jawaban akurat dan lengkap berdasarkan data di atas:"""
 
     prompt = PromptTemplate(input_variables=["context", "question"], template=prompt_template)
 
