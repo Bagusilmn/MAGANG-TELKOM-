@@ -1,24 +1,14 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
+
 from chatbot_popu import load_popu_chain
 from chatbot_eco import load_eco_chain
-from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI()
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # atau ganti dengan domain frontend yang spesifik
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-class Query(BaseModel):
-    question: str
-
-@app.on_event("startup")
-def startup_event():
+# Gunakan lifespan context manager
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     global popu_chain, eco_chain
     try:
         popu_chain = load_popu_chain()
@@ -27,7 +17,26 @@ def startup_event():
         print("✅ eco_chain loaded")
     except Exception as e:
         print(f"❌ Error loading chains: {e}")
+    yield
+    print("🛑 App shutting down")
 
+# Inisialisasi app dengan lifespan
+app = FastAPI(lifespan=lifespan)
+
+# Middleware CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Ganti dengan domain spesifik di produksi
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Schema query
+class Query(BaseModel):
+    question: str
+
+# Endpoint untuk Popu
 @app.post("/chat/popu")
 def chat_popu(q: Query):
     try:
@@ -39,6 +48,7 @@ def chat_popu(q: Query):
         print(f"❌ Error di endpoint /chat/popu: {e}")
         return {"result": f"Terjadi kesalahan pada server: {str(e)}"}
 
+# Endpoint untuk Eco
 @app.post("/chat/eco")
 def chat_eco(q: Query):
     try:
@@ -49,3 +59,4 @@ def chat_eco(q: Query):
     except Exception as e:
         print(f"❌ Error di endpoint /chat/eco: {e}")
         return {"result": f"Terjadi kesalahan pada server: {str(e)}"}
+
