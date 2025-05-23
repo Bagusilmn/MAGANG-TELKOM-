@@ -11,13 +11,32 @@ class Query(BaseModel):
 @app.on_event("startup")
 def startup_event():
     global popu_chain, eco_chain
-    popu_chain = load_popu_chain()
-    eco_chain = load_eco_chain()
+    try:
+        popu_chain = load_popu_chain()
+        print("✅ popu_chain loaded")
+        eco_chain = load_eco_chain()
+        print("✅ eco_chain loaded")
+    except Exception as e:
+        print(f"❌ Error loading chains: {e}")
 
 @app.post("/chat/popu")
 def chat_popu(q: Query):
-    return {"result": popu_chain.run(q.question)}
+    try:
+        result = popu_chain.run(q.question)
+        if not result:
+            return {"result": "Maaf, tidak ada jawaban yang tersedia untuk saat ini."}
+        return {"result": str(result)}
+    except Exception as e:
+        print(f"❌ Error di endpoint /chat/popu: {e}")
+        return {"result": f"Terjadi kesalahan pada server: {str(e)}"}
 
 @app.post("/chat/eco")
 def chat_eco(q: Query):
-    return {"result": eco_chain.run(q.question)}
+    try:
+        result = eco_chain.run(q.question)
+        if not result:
+            return {"result": "Maaf, tidak ada jawaban yang tersedia untuk saat ini."}
+        return {"result": str(result)}
+    except Exception as e:
+        print(f"❌ Error di endpoint /chat/eco: {e}")
+        return {"result": f"Terjadi kesalahan pada server: {str(e)}"}
