@@ -2,8 +2,17 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from chatbot_popu import load_popu_chain
 from chatbot_eco import load_eco_chain
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # atau ganti dengan domain frontend yang spesifik
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class Query(BaseModel):
     question: str
